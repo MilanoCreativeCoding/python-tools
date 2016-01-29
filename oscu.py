@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 from __future__ import print_function
-from sys import argv
+from sys import argv, stderr
 from time import sleep
 import liblo
+
+
+def print_e(*args, **kwargs):
+    "Print on standard error, for things that should not be piped"
+    # TODO use a logger, maybe
+    print(*args, file=stderr, **kwargs)
 
 
 def print_log(port=1234):
     "Display every message received on the given port (default 1234)"
 
-    print("Logging port:", port)
-    print()
+    print_e("Logging port:", port)
+    print_e()
 
     def callback(path, msg):
         print(path, *msg)
@@ -34,8 +40,8 @@ def send(addr, path, *msg):
 def forward(out_addr, in_port=1234):
     "Forward received messages: out_ip:out_port in_port"
 
-    print("Forwarding  port:", in_port, "to", out_addr)
-    print()
+    print_e("Forwarding  port:", in_port, "to", out_addr)
+    print_e()
 
     def callback(path, msg):
         print(path, *msg)
@@ -58,10 +64,10 @@ def main():
 
     def print_help():
         "Display commands description"
-        print("Usage:")
+        print_e("Usage:")
         # generate help from docstrings
         for cmd in commands:
-            print("  ", argv[0], cmd, "\t", commands[cmd].__doc__)
+            print_e("  ", argv[0], cmd, "\t", commands[cmd].__doc__)
 
     commands["log"] = print_log
     commands["send"] = send
@@ -78,8 +84,8 @@ def main():
     try:
         commands.get(cmd, print_help)(*args)
     except Exception as e:
-        print(e)
-        print()
+        print_e(e)
+        print_e()
         print_help()
 
 
