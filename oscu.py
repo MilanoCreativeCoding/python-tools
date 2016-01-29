@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 from sys import argv, stderr
+from os import system
 from time import sleep
 import liblo
 
@@ -9,6 +10,28 @@ def print_e(*args, **kwargs):
     "Print on standard error, for things that should not be piped"
     # TODO use a logger, maybe
     print(*args, file=stderr, **kwargs)
+
+
+def handle(port, cmd):
+    "Do something on message"
+
+    if hasattr(cmd, "__call__"):
+        # when called from python
+        callback = cmd
+    else:
+        # when called from bash
+        def callback(path, msg):
+            system("{} {} {}".format(cmd, path, " ".join(msg)))
+
+    server = liblo.ServerThread(int(port))
+    server.add_method(None, None, callback)  # wildcard callback
+    server.start()
+
+    try:
+        while True:
+            sleep(0.1)
+    except KeyboardInterrupt:
+        server.stop()
 
 
 def print_log(port=1234):
@@ -20,15 +43,7 @@ def print_log(port=1234):
     def callback(path, msg):
         print(path, *msg)
 
-    server = liblo.ServerThread(int(port))
-    server.add_method(None, None, callback)  # wildcard callback
-    server.start()
-
-    try:
-        while True:
-            sleep(0.1)
-    except KeyboardInterrupt:
-        server.stop()
+    handle(port, callback)
 
 
 def send(addr, path, *msg):
@@ -47,15 +62,7 @@ def forward(out_addr, in_port=1234):
         print(path, *msg)
         send(out_addr, path, *msg)
 
-    server = liblo.ServerThread(int(in_port))
-    server.add_method(None, None, callback)  # wildcard callback
-    server.start()
-
-    try:
-        while True:
-            sleep(0.1)
-    except KeyboardInterrupt:
-        server.stop()
+    handle(in_port, callback)
 
 
 def main():
@@ -72,6 +79,7 @@ def main():
     commands["log"] = print_log
     commands["send"] = send
     commands["forward"] = forward
+    commands["handle"] = handle
     commands["help"] = print_help
 
     if not argv[1:]:
