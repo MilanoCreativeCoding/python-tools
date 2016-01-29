@@ -14,6 +14,15 @@ def print_e(*args, **kwargs):
     print(*args, file=stderr, **kwargs)
 
 
+def check_address(addr):
+    "If only port is specified send to localhost"
+    splitted = addr.split(":")
+    if splitted[1:]:
+        return addr
+    else:
+        return ":".join(["localhost", splitted[0]])
+
+
 def handle(port, cmd):
     """port
     Do something on message"""
@@ -53,21 +62,22 @@ def print_log(port):
 def send(addr, path, *msg):
     """address path message
     Send message on a given path"""
-
+    addr = check_address(addr)
     target = liblo.Address("osc.udp://" + addr + "/")
     liblo.send(target, path, *msg)
 
 
-def forward(port, out_addr):
+def forward(port, addr):
     """port address
     Forward received messages to address"""
+    addr = check_address(addr)
 
-    print_e("Forwarding  port:", port, "to", out_addr)
+    print_e("Forwarding  port:", port, "to", addr)
     print_e()
 
     def callback(path, msg):
         print(path, *msg)
-        send(out_addr, path, *msg)
+        send(addr, path, *msg)
 
     handle(port, callback)
 
