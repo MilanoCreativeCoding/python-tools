@@ -5,6 +5,8 @@ from os import system
 from time import sleep
 import liblo
 
+commands = {}
+
 
 def print_e(*args, **kwargs):
     "Print on standard error, for things that should not be piped"
@@ -13,7 +15,8 @@ def print_e(*args, **kwargs):
 
 
 def handle(port, cmd):
-    "Do something on message"
+    """port
+    Do something on message"""
 
     if hasattr(cmd, "__call__"):
         # when called from python
@@ -34,8 +37,9 @@ def handle(port, cmd):
         server.stop()
 
 
-def print_log(port=1234):
-    "Display every message received on the given port (default 1234)"
+def print_log(port):
+    """port
+    Display every message received on the given port"""
 
     print_e("Logging port:", port)
     print_e()
@@ -47,34 +51,43 @@ def print_log(port=1234):
 
 
 def send(addr, path, *msg):
-    "Send message on a given path: ip:port path msg"
+    """address path message
+    Send message on a given path"""
+
     target = liblo.Address("osc.udp://" + addr + "/")
     liblo.send(target, path, *msg)
 
 
-def forward(out_addr, in_port=1234):
-    "Forward received messages: out_ip:out_port in_port"
+def forward(port, out_addr):
+    """port address
+    Forward received messages to address"""
 
-    print_e("Forwarding  port:", in_port, "to", out_addr)
+    print_e("Forwarding  port:", port, "to", out_addr)
     print_e()
 
     def callback(path, msg):
         print(path, *msg)
         send(out_addr, path, *msg)
 
-    handle(in_port, callback)
+    handle(port, callback)
+
+
+def print_help(cmd=None):
+    """[command]
+    Display commands description"""
+    if cmd:
+        # generate help from docstrings
+        print_e(argv[0], commands[cmd].__doc__)
+    else:
+        # list commads
+        print_e("Commands:")
+        for cmd in commands:
+            print_e("    ", cmd)
+        print_e("for details call:", argv[0], "help command")
 
 
 def main():
     "Main function, used when called as script"
-    commands = {}
-
-    def print_help():
-        "Display commands description"
-        print_e("Usage:")
-        # generate help from docstrings
-        for cmd in commands:
-            print_e("  ", argv[0], cmd, "\t", commands[cmd].__doc__)
 
     commands["log"] = print_log
     commands["send"] = send
@@ -94,7 +107,7 @@ def main():
     except Exception as e:
         print_e(e)
         print_e()
-        print_help()
+        print_help(cmd)
 
 
 if __name__ == "__main__":
