@@ -5,9 +5,8 @@ from time import sleep
 import liblo
 
 
-def print_log(port=7172):
+def print_log(port=1234):
     "Display every message received on the given port (optional)"
-    port = int(port)
 
     print("Logging port:", port)
     print()
@@ -15,7 +14,7 @@ def print_log(port=7172):
     def callback(path, args):
         print(path, *args)
 
-    server = liblo.ServerThread(port)
+    server = liblo.ServerThread(int(port))
     server.add_method(None, None, callback)  # wildcard callback
     server.start()
 
@@ -26,7 +25,10 @@ def print_log(port=7172):
         server.stop()
 
 
-# TODO: send, foward, etc...
+def send(addr, path, *msg):
+    "Send message on a given path: ip:port path msg"
+    target = liblo.Address("osc.udp://" + addr + "/")
+    liblo.send(target, path, *msg)
 
 
 def main():
@@ -41,6 +43,7 @@ def main():
             print("  ", argv[0], cmd, "\t", commands[cmd].__doc__)
 
     commands["log"] = print_log
+    commands["send"] = send
     commands["help"] = print_help
 
     if not argv[1:]:
