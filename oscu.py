@@ -23,17 +23,17 @@ def check_address(addr):
         return ":".join(["localhost", splitted[0]])
 
 
-def handle(port, cmd):
-    """port
+def handle(port, action):
+    """port action
     Do something on message"""
 
-    if hasattr(cmd, "__call__"):
+    if hasattr(action, "__call__"):
         # when called from python
-        callback = cmd
+        callback = action
     else:
         # when called from bash
         def callback(path, msg):
-            system("{} {} {}".format(cmd, path, " ".join(msg)))
+            system("{} {} {}".format(action, path, " ".join(msg)))
 
     server = liblo.ServerThread(int(port))
     server.add_method(None, None, callback)  # wildcard callback
@@ -87,7 +87,7 @@ def print_help(cmd=None):
     Display commands description"""
     if cmd:
         # generate help from docstrings
-        print_e(argv[0], commands[cmd].__doc__)
+        print_e(argv[0], cmd,  commands[cmd].__doc__)
     else:
         # list commads
         print_e("Commands:")
