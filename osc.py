@@ -16,7 +16,7 @@ def print_e(*args, **kwargs):
 
 def check_address(addr):
     "If only port is specified send to localhost"
-    splitted = addr.split(":")
+    splitted = str(addr).split(":")
     if splitted[1:]:
         return addr
     else:
