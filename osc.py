@@ -64,7 +64,14 @@ def send(addr, path, *msg):
     Send message on a given path"""
     addr = check_address(addr)
     target = liblo.Address("osc.udp://" + addr + "/")
-    liblo.send(target, path, *msg)
+
+    def try_float(x):
+        try:
+            return float(x)
+        except ValueError:
+            return x
+
+    liblo.send(target, path, *[try_float(x) for x in msg])
 
 
 def forward(port, addr):
